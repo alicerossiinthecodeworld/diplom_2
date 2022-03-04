@@ -16,7 +16,6 @@ public class OrderClient extends RestAssuredClient{
     @Step("получение ингредиентов")
     public Response getIngredients(){
         return given()
-                .log().all()
                 .spec(getBaseSpec())
                 .get(INGREDIENT_PATH);
     }
@@ -26,7 +25,6 @@ public class OrderClient extends RestAssuredClient{
         JSONObject orderBody= new JSONObject();
         orderBody.put("ingredients", ingredient);
         return given()
-                .log().all()
                 .spec(getBaseSpec())
                 .body(orderBody.toString())
                 .post(ORDER_PATH);
@@ -37,7 +35,6 @@ public class OrderClient extends RestAssuredClient{
         JSONObject orderBody= new JSONObject();
         orderBody.put("ingredients", ingredient);
         return given()
-                .log().all()
                 .header("Authorization", token)
                 .spec(getBaseSpec())
                 .body(orderBody.toString())
@@ -47,7 +44,6 @@ public class OrderClient extends RestAssuredClient{
     @Step("получение заказов пользователя")
     public Response getUserOrders(String token){
         return given()
-                .log().all()
                 .header("Authorization", token)
                 .spec(getBaseSpec())
                 .get(ORDER_PATH);
