@@ -1,4 +1,4 @@
-import io.qameta.allure.Step;
+import io.qameta.allure.junit4.DisplayName;
 import io.restassured.response.Response;
 import org.junit.After;
 import org.junit.Before;
@@ -7,7 +7,7 @@ import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 
 public class LoginUserTest{
-    private Response resp;
+    private Response response;
     private UserClient userClient;
     private User user;
 
@@ -18,43 +18,23 @@ public class LoginUserTest{
     }
     @After
     public void tearDown(){
-        deleteUser(user);
+        userClient.deleteUser(user);
     }
 
 
     @Test
+    @DisplayName("тест логина")
     public void loginTest(){
-        createUser(user);
-        resp = loginUser(user);
-        assertEquals(200, resp.getStatusCode());
-        System.out.print(resp.body().path("accessToken").toString());
+        userClient.createUser(user);
+        response = userClient.login(user);
+        assertEquals(200, response.getStatusCode());
+        System.out.print(response.body().path("accessToken").toString());
     }
     @Test
+    @DisplayName("тест логина незарегистрированного пользователя")
     public void loginNonRegisteredTest(){
-        resp = loginUser(user);
-        assertEquals(401, resp.getStatusCode());
-    }
-
-    @Step("CreateUser")
-    public Response createUser(User user) {
-        return userClient.createUser(user);
-    }
-
-    @Step("LoginUser")
-    public Response loginUser(User user){
-        return userClient.login(user);
-    }
-
-    @Step("GetToken")
-    public String getToken(User user){
-        return loginUser(user).body().path("accessToken");
-    }
-
-    @Step("deleteUser")
-    public void deleteUser(User user) {
-        if (getToken(user) != null) {
-            userClient.deleteUser(getToken(user));
-        }
+        response = userClient.login(user);
+        assertEquals(401, response.getStatusCode());
     }
 
 }

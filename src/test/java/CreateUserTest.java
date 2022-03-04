@@ -1,4 +1,4 @@
-import io.qameta.allure.Step;
+import io.qameta.allure.junit4.DisplayName;
 import io.restassured.response.Response;
 import org.junit.After;
 import org.junit.Before;
@@ -6,7 +6,7 @@ import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 
 public class CreateUserTest extends RestAssuredClient{
-    private Response resp;
+    private Response response;
     private UserClient userClient;
     private User user;
 
@@ -18,49 +18,42 @@ public class CreateUserTest extends RestAssuredClient{
 
     @After
     public void tearDown(){
-        deleteUser(user);
+        userClient.deleteUser(user);
     }
 
     @Test
+    @DisplayName("тест создания нового пользователя")
     public void createUniqueUserSuccessTest(){
-        Response resp = createUser(user);
+        Response resp = userClient.createUser(user);
         assertEquals(200, resp.getStatusCode());
     }
 
     @Test
+    @DisplayName("тест создания одинакового пользователя")
     public void createNonUniqueUserTest(){
-        createUser(user);
-        resp = createUser(user);
-        assertEquals(403, resp.getStatusCode());
+        userClient.createUser(user);
+        response = userClient.createUser(user);
+        assertEquals(403, response.getStatusCode());
     }
 
     @Test
+    @DisplayName("тест создания пользователя без почты")
     public void createUserWithoutEmailTest(){
-        resp = userClient.createUserWithoutEmail(user);
-        assertEquals(403, resp.getStatusCode());
+        response = userClient.createUserWithoutEmail(user);
+        assertEquals(403, response.getStatusCode());
     }
 
     @Test
+    @DisplayName("тест создания пользователя без пароля")
     public void createUserWithoutPasswordTest(){
-        resp = userClient.createUserWithoutPassword(user);
-        assertEquals(403, resp.getStatusCode());
+        response = userClient.createUserWithoutPassword(user);
+        assertEquals(403, response.getStatusCode());
     }
 
     @Test
+    @DisplayName("тест создания пользователя без имени")
     public void createUserWithoutNameTest(){
-        resp = userClient.createUserWithoutName(user);
-        assertEquals(403, resp.getStatusCode());
-    }
-
-    @Step("CreateUser")
-    public Response createUser(User user) {
-        return userClient.createUser(user);
-}
-    @Step("DeleteUser")
-    public void deleteUser(User user){
-         String token = userClient.login(user).body().path("accessToken");
-         if (token != null){
-             userClient.deleteUser(token);
-        }
+        response = userClient.createUserWithoutName(user);
+        assertEquals(403, response.getStatusCode());
     }
 }

@@ -1,4 +1,4 @@
-import io.qameta.allure.Step;
+import io.qameta.allure.junit4.DisplayName;
 import io.restassured.response.Response;
 import org.junit.After;
 import org.junit.Before;
@@ -8,7 +8,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
 public class ChangingUserDataTest {
-    private Response resp;
+    private Response response;
     private UserClient userClient;
     private User user;
 
@@ -20,117 +20,95 @@ public class ChangingUserDataTest {
     }
     @After
     public void tearDown(){
-        deleteUser(user);
+        userClient.deleteUser(user);
     }
 
     @Test
+    @DisplayName("тест изменения данных с авторизацией")
     public void getUserDataAuthorizedSuccessTest(){
-        createUser(user);
-        resp = getUserData(getToken(user));
-        assertEquals(200, resp.getStatusCode());
+        userClient.createUser(user);
+        response = userClient.getUserData(userClient.getToken(user));
+        assertEquals(200, response.getStatusCode());
     }
 
     @Test
+    @DisplayName("тест получения данных пользователя")
     public void returnsUserDataTest(){
-        createUser(user);
-        resp = getUserData(getToken(user));
-        assertNotNull(resp.body().path("user.email"));
-        assertNotNull(resp.body().path("user.name"));
+        userClient.createUser(user);
+        response = userClient.getUserData(userClient.getToken(user));
+        assertNotNull(response.body().path("user.email"));
+        assertNotNull(response.body().path("user.name"));
     }
 
     @Test
+    @DisplayName("тест изменения пароля")
     public void userPasswordChangedTest(){
-        createUser(user);
+        userClient.createUser(user);
         User newUser = new User(user.email, User.getRandomData(), user.name);
-        resp = changeUserData(getToken(user), newUser);
-        assertEquals(200, resp.getStatusCode());
-        assertEquals(401, loginUser(user).getStatusCode());
-        deleteUser(newUser);
+        response = userClient.changeUserData(userClient.getToken(user), newUser);
+        assertEquals(200, response.getStatusCode());
+        assertEquals(401, userClient.login(user).getStatusCode());
+        userClient.deleteUser(newUser);
     }
 
     @Test
+    @DisplayName("тест изменения email")
     public void userEmailChangedTest(){
-        createUser(user);
+        userClient.createUser(user);
         User newUser = new User(User.getRandomEmail(), user.password, user.name);
-        resp = changeUserData(getToken(user), newUser);
-        assertEquals(200, resp.getStatusCode());
-        assertEquals(401, loginUser(user).getStatusCode());
-        deleteUser(newUser);
+        response = userClient.changeUserData(userClient.getToken(user), newUser);
+        assertEquals(200, response.getStatusCode());
+        assertEquals(401, userClient.login(user).getStatusCode());
+        userClient.deleteUser(newUser);
     }
 
     @Test
+    @DisplayName("тест изменения имени пользователя")
     public void userNameChangedTest(){
-        createUser(user);
+        userClient.createUser(user);
         User newUser = new User(user.email, user.password, User.getRandomData());
-        resp = changeUserData(getToken(user), newUser);
-        assertEquals(200, resp.getStatusCode());
-        deleteUser(newUser);
+        response = userClient.changeUserData(userClient.getToken(user), newUser);
+        assertEquals(200, response.getStatusCode());
+        userClient.deleteUser(newUser);
     }
 
     @Test
+    @DisplayName("при изменении почты возвращается новый email")
     public void changeEmailReturnsNewEmail(){
-        createUser(user);
+        userClient.createUser(user);
         String email = User.getRandomEmail();
         User newUser = new User(email, user.password, user.name);
-        resp = changeUserData(getToken(user), newUser);
-        assertEquals(email.toLowerCase(), resp.body().path("user.email"));
-        deleteUser(newUser);
+        response = userClient.changeUserData(userClient.getToken(user), newUser);
+        assertEquals(email.toLowerCase(), response.body().path("user.email"));
+        userClient.deleteUser(newUser);
     }
 
     @Test
+    @DisplayName("при изменении имени возвращается новое имя")
     public void changeNameReturnsNewName(){
-        createUser(user);
+        userClient.createUser(user);
         String name = User.getRandomData();
         User newUser = new User(user.email, user.password, name);
-        resp = changeUserData(getToken(user), newUser);
-        assertEquals(name, resp.body().path("user.name"));
-        deleteUser(newUser);
+        response =userClient.changeUserData(userClient.getToken(user), newUser);
+        assertEquals(name, response.body().path("user.name"));
+        userClient.deleteUser(newUser);
     }
 
     @Test
+    @DisplayName("тест изменения данных без авторизации")
     public void changingDataUnauthorizedTest(){
-        resp = changeUserData("", user);
-        assertEquals(401, resp.getStatusCode());
-        assertEquals("You should be authorised", resp.body().path("message"));
+        response = userClient.changeUserData("", user);
+        assertEquals(401, response.getStatusCode());
+        assertEquals("You should be authorised", response.body().path("message"));
     }
 
 
     @Test
+    @DisplayName("тест ошибки авторизации при получении данных")
     public void getDataAuthorizationErrorTest(){
-        resp = getUserData("");
-        assertEquals(401, resp.getStatusCode());
-        assertEquals("You should be authorised", resp.body().path("message"));
+        response = userClient.getUserData("");
+        assertEquals(401, response.getStatusCode());
+        assertEquals("You should be authorised", response.body().path("message"));
     }
 
-
-    @Step("CreateUser")
-    public Response createUser(User user) {
-        return userClient.createUser(user);
-    }
-
-    @Step("LoginUser")
-    public Response loginUser(User user){
-        return userClient.login(user);
-    }
-
-    @Step("GetToken")
-    public String getToken(User user){
-        return loginUser(user).body().path("accessToken");
-    }
-
-    @Step("GetUserData")
-    public Response getUserData(String token){
-        return userClient.getUserData(token);
-    }
-
-    @Step("ChangeUserData")
-    public Response changeUserData(String token, User user){
-        return userClient.changeUserData(token, user);
-    }
-    @Step("deleteUser")
-    public void deleteUser(User user) {
-        if (getToken(user) != null) {
-            userClient.deleteUser(getToken(user));
-        }
-    }
 }
